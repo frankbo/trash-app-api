@@ -2,11 +2,8 @@ package handlers
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"io"
-	"net/http"
 
+	service "github.com/frankbo/trash-app-api/internal/services"
 	"github.com/frankbo/trash-app-api/internal/types"
 )
 
@@ -26,7 +23,11 @@ func HandleRequest(ctx context.Context, trashEvent TrashEvent) (LambdaResponse, 
 	locationId := trashEvent.LocationId
 	streetId := trashEvent.StreetId
 
-	
+	events, err := service.FetchEvents(locationId, streetId)
+
+	if err != nil {
+		return LambdaResponse{}, err
+	}
 
 	return LambdaResponse{StatusCode: 200, Headers: map[string]string{"Content-Type": "application/json"}, Body: events}, nil
 }
