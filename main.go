@@ -1,21 +1,19 @@
 package main
 
 import (
-	"log"
-	"net/http"
-
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/frankbo/trash-app-api/internal/handlers"
 )
 
-const address = ":8080"
-
 func main() {
+	lambda.Start(handlers.HandleRequest)
 
-	http.Handle("/events", handlers.EventHandler())
+	// TODO with params distinguish between lambda and service.
+	// http.Handle("/events", handlers.EventHandler())
 
-	s := &http.Server{
-		Addr: address,
-	}
-	log.Printf("Listen on %s...", address)
-	log.Fatal(s.ListenAndServe())
+	// s := &http.Server{
+	// 	Addr: address,
+	// }
+	// log.Printf("Listen on %s...", address)
+	// log.Fatal(s.ListenAndServe())
 }
