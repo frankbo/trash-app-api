@@ -5,37 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sort"
 	"strings"
 	"time"
 
 	ics "github.com/arran4/golang-ical"
+	"github.com/frankbo/trash-app-api/internal/types"
 )
-
-type Event struct {
-	Summary     string    `json:"summary"`
-	Description string    `json:"description"`
-	StartDate   time.Time `json:"startDate"`
-	Location    string    `json:"location"`
-}
-
-type Events struct {
-	Events []Event `json:"events"`
-}
-
-func (e Events) sortEventsByStartDate() {
-	sort.Sort(SortByStartDate(e.Events))
-}
-
-// -----------------------
-
-type SortByStartDate []Event
-
-func (a SortByStartDate) Len() int           { return len(a) }
-func (a SortByStartDate) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a SortByStartDate) Less(i, j int) bool { return a[i].StartDate.Before(a[j].StartDate) }
-
-// -----------------------
 
 func formatStartDate(date string) (time.Time, error) {
 	value, err := time.Parse("20060102", date)
@@ -46,15 +21,15 @@ func formatStartDate(date string) (time.Time, error) {
 	return value, nil
 }
 
-func marshalIcalEvents(icalEvents []*ics.VEvent) (Events, error) {
-	events := []Event{}
+func marshalIcalEvents(icalEvents []*ics.VEvent) (types.Events, error) {
+	events := []types.Event{}
 	for _, value := range icalEvents {
 		startDate, err := formatStartDate(value.GetProperty(ics.ComponentPropertyDtStart).Value)
 		if err != nil {
-			return Events{}, err
+			return types.Events{}, err
 		}
 		location := strings.TrimSpace(value.GetProperty(ics.ComponentPropertyLocation).Value)
-		event := Event{
+		event := types.Event{
 			Summary:     value.GetProperty(ics.ComponentPropertySummary).Value,
 			Location:    location,
 			StartDate:   startDate,
@@ -63,7 +38,7 @@ func marshalIcalEvents(icalEvents []*ics.VEvent) (Events, error) {
 
 		events = append(events, event)
 	}
-	return Events{Events: events}, nil
+	return types.Events{Events: events}, nil
 }
 
 func parseResponse(responseBody []byte) ([]*ics.VEvent, error) {
@@ -126,7 +101,7 @@ func EventHandler() http.Handler {
 			return
 		}
 
-		events.sortEventsByStartDate()
+		events.SortEventsByStartDate()
 
 		w.Header().Add("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(events); err != nil {
