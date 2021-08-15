@@ -70,9 +70,24 @@ func parseResponse(responseBody []byte) []*ics.VEvent {
 	return cal.Events()
 }
 
+func createRequstUrl(locationId string, streetId string) string {
+	baseUrl := "https://www.bad-berleburg.de/"
+	location := "&ort=" + locationId
+	street := "&strasse=" + streetId
+	if streetId == "" {
+		street = "&strasse=" + locationId
+	}
+	fullUrl := baseUrl + "output/abfall_export.php?csv_export=1&mode=vcal" + location + street + "&vtyp=4&vMo=1&vJ=2021&bMo=12"
+	return fullUrl
+}
+
 func EventHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		url := "https://www.bad-berleburg.de/output/abfall_export.php?csv_export=1&mode=vcal&ort=1746.22&strasse=1746.22.1&vtyp=4&vMo=1&vJ=2021&bMo=12"
+
+		locationId := r.FormValue("locationId")
+		streetId := r.FormValue("streetId")
+
+		url := createRequstUrl(locationId, streetId)
 		resp, err := http.Get(url)
 		if err != nil {
 			println("could fetch from url", err)
