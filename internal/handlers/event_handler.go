@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"sort"
@@ -36,19 +37,22 @@ func (a SortByStartDate) Less(i, j int) bool { return a[i].StartDate.Before(a[j]
 
 // -----------------------
 
-func formatStartDate(date string) time.Time {
+func formatStartDate(date string) (time.Time, error) {
 	value, err := time.Parse("20060102", date)
 
 	if err != nil {
-		println(err)
+		return time.Time{}, fmt.Errorf("error while parsing string to time %g", err)
 	}
-	return value
+	return value, nil
 }
 
-func marshalIcalEvents(icalEvents []*ics.VEvent) Events {
+func marshalIcalEvents(icalEvents []*ics.VEvent) (Events, error) {
 	events := []Event{}
 	for _, value := range icalEvents {
-		startDate := formatStartDate(value.GetProperty(ics.ComponentPropertyDtStart).Value)
+		startDate, err := formatStartDate(value.GetProperty(ics.ComponentPropertyDtStart).Value)
+		if err != nil {
+			return Events{}, err
+		}
 		location := strings.TrimSpace(value.GetProperty(ics.ComponentPropertyLocation).Value)
 		event := Event{
 			Summary:     value.GetProperty(ics.ComponentPropertySummary).Value,
@@ -59,24 +63,21 @@ func marshalIcalEvents(icalEvents []*ics.VEvent) Events {
 
 		events = append(events, event)
 	}
-	return Events{Events: events}
+	return Events{Events: events}, nil
 }
 
-func parseResponse(responseBody []byte) []*ics.VEvent {
+func parseResponse(responseBody []byte) ([]*ics.VEvent, error) {
 	cal, err := ics.ParseCalendar(strings.NewReader(string(responseBody)))
 	if err != nil {
-		println("error while parsing response body")
+		return nil, fmt.Errorf("error while parsing response body %g", err)
 	}
-	return cal.Events()
+	return cal.Events(), nil
 }
 
 func createRequstUrl(locationId string, streetId string) string {
 	baseUrl := "https://www.bad-berleburg.de/"
 	location := "&ort=" + locationId
 	street := "&strasse=" + streetId
-	if streetId == "" {
-		street = "&strasse=" + locationId
-	}
 	fullUrl := baseUrl + "output/abfall_export.php?csv_export=1&mode=vcal" + location + street + "&vtyp=4&vMo=1&vJ=2021&bMo=12"
 	return fullUrl
 }
@@ -87,15 +88,43 @@ func EventHandler() http.Handler {
 		locationId := r.FormValue("locationId")
 		streetId := r.FormValue("streetId")
 
+		if locationId == "" {
+			http.Error(w, "Missing query parameter locationId", http.StatusBadRequest)
+			return
+		}
+
+		if streetId == "" {
+			streetId = locationId
+		}
+
 		url := createRequstUrl(locationId, streetId)
 		resp, err := http.Get(url)
+
 		if err != nil {
-			println("could fetch from url", err)
+			http.Error(w, fmt.Sprintf("Error while fetching from url: %s", err), http.StatusBadRequest)
+			return
 		}
+
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
-		icalEvents := parseResponse(body)
-		events := marshalIcalEvents(icalEvents)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
+			return
+		}
+
+		icalEvents, err := parseResponse(body)
+
+		if err != nil {
+			http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
+			return
+		}
+
+		events, err := marshalIcalEvents(icalEvents)
+
+		if err != nil {
+			http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
+			return
+		}
 
 		events.sortEventsByStartDate()
 
