@@ -18,9 +18,6 @@ jobs:
       uses: actions/setup-go@v2
     - run: go version
     
-    - name: Install depdencies
-      run: go get
-    
     - name: Build binary
       run: GOOS=linux go build
 
