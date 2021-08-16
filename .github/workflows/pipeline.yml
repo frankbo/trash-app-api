@@ -20,13 +20,13 @@ jobs:
         go-version: 1.16.x
     - run: go version
     
-    - name: Build binary
+    - name: Build Binary
       run: GOOS=linux go build
 
     - name: Zip Binary
       run: zip function.zip trash-app-api
 
-    - name: Archive code coverage results
+    - name: Upload Zipped Binary
       uses: actions/upload-artifact@v2
       with:
         name: zipped-binary
@@ -48,8 +48,6 @@ jobs:
       with:
         name: zipped-binary
         path: infra
-
-    - run: ls -R
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
