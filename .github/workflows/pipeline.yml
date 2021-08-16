@@ -16,9 +16,16 @@ jobs:
     
     - name: Setup Go
       uses: cedrickring/golang-action@1.6.0
+      with:
+        args: GOOS=linux go build
+      env:
+        GO111MODULE: "on"
     
-    - name: Build binary
-      run: GOOS=linux go build
+    # - name: Install depdencies
+    #   run: go get
+    
+    # - name: Build binary
+    #   run: GOOS=linux go build
 
     - name: Zip Binary
       run: zip infra/function.zip trash-app-api
