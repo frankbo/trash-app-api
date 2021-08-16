@@ -75,6 +75,7 @@ resource "aws_api_gateway_deployment" "trash_api_gw_deploy" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.trash_api_gateway.id
+  stage_name  = "v1"
 }
 
 resource "aws_api_gateway_rest_api" "trash_api_gateway" {
