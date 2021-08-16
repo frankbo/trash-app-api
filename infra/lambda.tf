@@ -2,6 +2,22 @@ provider "aws" {
   region = "eu-central-1"
 }
 
+terraform {
+  backend "s3" {
+    bucket = "blb-trash-api-terraform-state"
+    key    = "default-infrastructure"
+    region = "eu-central-1"
+  }
+}
+
+resource "aws_s3_bucket" "terraform_state" {
+  bucket = "blb-trash-api-terraform-state"
+
+  versioning {
+    enabled = true
+  }
+}
+
 resource "aws_lambda_function" "trash_api_lambda" {
   filename      = "function.zip"
   function_name = "trash-api"
