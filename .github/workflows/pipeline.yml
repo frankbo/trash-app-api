@@ -12,7 +12,7 @@ jobs:
     steps:
 
     - name: Checkout Repository
-      uses: actions/checkout@master
+      uses: actions/checkout@v2
     
     - name: Setup Go
       uses: actions/setup-go@v2
@@ -24,16 +24,32 @@ jobs:
       run: GOOS=linux go build
 
     - name: Zip Binary
-      run: zip infra/function.zip trash-app-api
+      run: zip function.zip trash-app-api
+
+    - name: Archive code coverage results
+      uses: actions/upload-artifact@v2
+      with:
+        name: zipped-binary
+        path: function.zip
 
   terraform-actions:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
     needs: build-application
+    defaults:
+      run:
+        working-directory: ./infra
     steps:
 
-    - run: ls -la
-    - run: cd infra
+    - name: Checkout Repository
+      uses: actions/checkout@v2 
+    
+    - uses: actions/download-artifact@v2
+      with:
+        name: zipped-binary
+        path: infra
+
+    - run: ls -R
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
