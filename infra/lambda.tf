@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_lambda_function" "trash_api_lambda" {
-  filename      = "${path.cwd}/../function.zip"
+  filename      = "function.zip"
   function_name = "trash-api"
   role          = aws_iam_role.lambda_exec.arn
   handler       = "trash-app-api"
@@ -11,7 +11,7 @@ resource "aws_lambda_function" "trash_api_lambda" {
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-  source_code_hash = filebase64sha256("${path.cwd}/../function.zip")
+  source_code_hash = filebase64sha256("function.zip")
 
   runtime = "go1.x"
 }
@@ -75,7 +75,6 @@ resource "aws_api_gateway_deployment" "trash_api_gw_deploy" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.trash_api_gateway.id
-  stage_name  = "test"
 }
 
 resource "aws_api_gateway_rest_api" "trash_api_gateway" {
