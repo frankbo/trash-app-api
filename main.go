@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	lambda.Start(handlers.HandleRequest)
+	lambda.Start(handlers.HandleLambdaRequest)
 
 	// TODO with params distinguish between lambda and service.
 	// http.Handle("/events", handlers.EventHandler())
