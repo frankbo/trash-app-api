@@ -26,7 +26,7 @@ jobs:
   terraform-actions:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
-    needs: build-applicatiion
+    needs: build-application
     steps:
 
     - name: Configure AWS Credentials
