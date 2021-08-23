@@ -10,6 +10,7 @@ func main() {
 	lambda.Start(handlers.HandleLambdaRequest(service.FetchEvents))
 
 	// TODO with params distinguish between lambda and service.
+	// address := ":8080"
 	// http.Handle("/events", handlers.HandleHttpRequest(service.FetchEvents))
 
 	// s := &http.Server{
