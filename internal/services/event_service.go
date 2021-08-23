@@ -62,6 +62,11 @@ func FetchEvents(locationId string, streetId string) (types.Events, error) {
 		return types.Events{}, errors.New("Missing query parameter locationId")
 	}
 
+	// Add special case for location Muesse. It is the only location besides Bad Berleburg that needs a separate streetId
+	if locationId == "1746.24" {
+		streetId = "1746.30.1"
+	}
+
 	if streetId == "" {
 		streetId = locationId
 	}
