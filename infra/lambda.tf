@@ -18,9 +18,18 @@ resource "aws_s3_bucket" "terraform_state" {
   }
 }
 
+variable "lambda_function_name" {
+  default = "trash-api"
+}
+
+resource "aws_cloudwatch_log_group" "trash_logs" {
+  name              = "/aws/lambda/${var.lambda_function_name}"
+  retention_in_days = 14
+}
+
 resource "aws_lambda_function" "trash_api_lambda" {
   filename      = "function.zip"
-  function_name = "trash-api"
+  function_name = var.lambda_function_name
   role          = aws_iam_role.lambda_exec.arn
   handler       = "trash-app-api"
 
@@ -30,6 +39,39 @@ resource "aws_lambda_function" "trash_api_lambda" {
   source_code_hash = filebase64sha256("function.zip")
 
   runtime = "go1.x"
+
+  depends_on = [
+    aws_iam_role_policy_attachment.lambda_logs,
+    aws_cloudwatch_log_group.trash_logs,
+  ]
+}
+
+# See also the following AWS managed policy: AWSLambdaBasicExecutionRole
+resource "aws_iam_policy" "lambda_logging" {
+  name        = "lambda_logging"
+  path        = "/"
+  description = "IAM policy for logging from a lambda"
+
+  policy = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Action" : [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Resource" : "arn:aws:logs:*:*:*",
+          "Effect" : "Allow"
+        }
+      ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role       = aws_iam_role.lambda_exec.name  
+  policy_arn = aws_iam_policy.lambda_logging.arn
 }
 
 resource "aws_iam_role" "lambda_exec" {
