@@ -53,7 +53,7 @@ func createRequstUrl(locationId string, streetId string) string {
 	baseUrl := "https://www.bad-berleburg.de/"
 	location := "&ort=" + locationId
 	street := "&strasse=" + streetId
-	fullUrl := baseUrl + "output/abfall_export.php?csv_export=1&mode=vcal" + location + street + "&vtyp=4&vMo=1&vJ=2022&bMo=12"
+	fullUrl := baseUrl + "output/abfall_export.php?csv_export=1&mode=vcal" + location + street + "&vtyp=4&vMo=1&vJ=2023&bMo=12"
 	return fullUrl
 }
 
